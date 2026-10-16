@@ -58,14 +58,14 @@ pipeline {
             }
         }
 
-        stage('Trigger Argo Workflow') {
-            steps {
-                sh '''
-                    set -eu
 
-                    echo "CI passed. Submitting release workflow..."
+stage('Trigger Argo Workflow') {
+    steps {
+        withEnv(['KUBECONFIG=/var/lib/jenkins/.kube/config']) {
+            sh '''
+                set -eu
 
-                    kubectl create -f - <<EOF
+                kubectl create -n workflow -f - <<EOF
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
@@ -81,10 +81,10 @@ spec:
       - name: source-branch
         value: "main"
 EOF
-                '''
-            }
+            '''
         }
     }
+}
 
     post {
         success {

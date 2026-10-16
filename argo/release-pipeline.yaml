@@ -1,0 +1,27 @@
+
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: release-pipeline
+  namespace: workflow
+spec:
+  entrypoint: release
+  arguments:
+    parameters:
+      - name: git-revision
+        value: unknown
+      - name: source-branch
+        value: main
+
+  templates:
+    - name: release
+      container:
+        image: alpine:3.20
+        command: [sh, -c]
+        args:
+          - |
+            echo "Argo Workflow triggered successfully"
+            echo "Git revision: {{workflow.parameters.git-revision}}"
+            echo "Source branch: {{workflow.parameters.source-branch}}"
+            echo "Jenkins -> Argo connection successful"
+
