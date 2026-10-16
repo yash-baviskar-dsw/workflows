@@ -51,21 +51,19 @@ pipeline {
                         python3 -m venv .venv
                         . .venv/bin/activate
                         python3 -m pip install -r requirements.txt
-                        python3 -c \
-                          "from app import app; print('service2 OK')"
+                        python3 -c "from app import app; print('service2 OK')"
                     '''
                 }
             }
         }
 
+        stage('Trigger Argo Workflow') {
+            steps {
+                withEnv(['KUBECONFIG=/var/lib/jenkins/.kube/config']) {
+                    sh '''
+                        set -eu
 
-stage('Trigger Argo Workflow') {
-    steps {
-        withEnv(['KUBECONFIG=/var/lib/jenkins/.kube/config']) {
-            sh '''
-                set -eu
-
-                kubectl create -n workflow -f - <<EOF
+                        kubectl create -n workflow -f - <<EOF
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
@@ -81,10 +79,11 @@ spec:
       - name: source-branch
         value: "main"
 EOF
-            '''
+                    '''
+                }
+            }
         }
     }
-}
 
     post {
         success {
