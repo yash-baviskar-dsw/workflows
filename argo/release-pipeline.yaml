@@ -5,6 +5,7 @@ metadata:
   name: release-pipeline
   namespace: workflow
 spec:
+  serviceAccountName: workflow-executor
   entrypoint: release
   arguments:
     parameters:
