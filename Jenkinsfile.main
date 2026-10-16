@@ -1,0 +1,99 @@
+
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+        skipDefaultCheckout(true)
+        disableConcurrentBuilds()
+    }
+
+    stages {
+        stage('Checkout main') {
+            steps {
+                checkout scm
+
+                script {
+                    if (env.BRANCH_NAME &&
+                        env.BRANCH_NAME != 'main') {
+                        error('This pipeline is intended for main only')
+                    }
+                }
+
+                sh '''
+                    set -eu
+                    echo "Branch: $(git branch --show-current)"
+                    echo "Commit: $(git rev-parse HEAD)"
+                '''
+            }
+        }
+
+        stage('Test service1') {
+            steps {
+                dir('service1') {
+                    sh '''
+                        set -eu
+                        python3 -m venv .venv
+                        . .venv/bin/activate
+                        python3 -m pip install -r requirements.txt
+                        python3 -m pip install pytest
+                        python3 -m pytest
+                    '''
+                }
+            }
+        }
+
+        stage('Test service2') {
+            steps {
+                dir('service2') {
+                    sh '''
+                        set -eu
+                        python3 -m venv .venv
+                        . .venv/bin/activate
+                        python3 -m pip install -r requirements.txt
+                        python3 -c \
+                          "from app import app; print('service2 OK')"
+                    '''
+                }
+            }
+        }
+
+        stage('Trigger Argo Workflow') {
+            steps {
+                sh '''
+                    set -eu
+
+                    echo "CI passed. Submitting release workflow..."
+
+                    kubectl create -f - <<EOF
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: main-release-
+  namespace: workflow
+spec:
+  workflowTemplateRef:
+    name: release-pipeline
+  arguments:
+    parameters:
+      - name: git-revision
+        value: "${GIT_COMMIT}"
+      - name: source-branch
+        value: "main"
+EOF
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'CI passed and the Argo Workflow was submitted.'
+        }
+
+        failure {
+            echo 'Pipeline failed. Check the failed stage and console output.'
+        }
+    }
+}
+
