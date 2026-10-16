@@ -1,0 +1,11 @@
+replicaCount: 1
+
+image:
+  repository: unifyaipublic.azurecr.io/service2
+  tag: v0.2.4
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000

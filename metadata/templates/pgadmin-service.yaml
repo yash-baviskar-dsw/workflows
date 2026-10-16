@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "metadata.pgadminService" . }}
+  labels:
+    {{- include "metadata.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.pgadmin.service.type }}
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: pgadmin
+  ports:
+    - name: http
+      port: {{ .Values.pgadmin.service.port }}
+      targetPort: http

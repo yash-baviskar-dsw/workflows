@@ -1,0 +1,30 @@
+nameOverride: ""
+fullnameOverride: ""
+
+postgres:
+  image: postgres:15
+  replicas: 1
+  database: metadata
+  username: metadata_user
+  # Replace these demo values before using beyond a disposable local cluster.
+  password: metadata
+  port: 5432
+  storage:
+    size: 2Gi
+    storageClassName: local-path
+    accessMode: ReadWriteOnce
+  resources: {}
+
+pgadmin:
+  image: dpage/pgadmin4:9.9
+  replicas: 1
+  email: admin@example.com
+  # Replace this demo value before using beyond a disposable local cluster.
+  password: pgadminpass
+  service:
+    type: NodePort
+    port: 80
+  resources: {}
+
+# Mounts config_local.py through a ConfigMap. The pgAdmin server definition is
+# generated as a Secret so the database password is not placed in a ConfigMap.
